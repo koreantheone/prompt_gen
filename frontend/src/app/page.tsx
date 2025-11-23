@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { COUNTRIES, LANGUAGES, Mode, SearchParams, API_OPTIONS } from '@/types';
 
 export default function Home() {
@@ -55,17 +56,26 @@ export default function Home() {
           Generate high-quality prompts from real-world data.
         </p>
 
+        <div className="flex justify-center mb-8">
+          <Link
+            href="/prompt-generator"
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          >
+            Or generate prompts from existing CSV hierarchy &rarr;
+          </Link>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Prompt Input */}
           <div className="space-y-2">
             <label htmlFor="prompt" className="block text-sm font-medium text-slate-300">
               Core Prompt / Topic
             </label>
-            <input
+            <textarea
               id="prompt"
-              type="text"
               required
-              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-500"
+              rows={4}
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-500 resize-y"
               placeholder="e.g., Best coffee machine for home"
               value={formData.prompt}
               onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
@@ -77,10 +87,10 @@ export default function Home() {
             <label htmlFor="keywords" className="block text-sm font-medium text-slate-300">
               Reference Keywords (Optional)
             </label>
-            <input
+            <textarea
               id="keywords"
-              type="text"
-              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-500"
+              rows={3}
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-slate-500 resize-y"
               placeholder="espresso, latte, barista (comma separated)"
               value={formData.keywords}
               onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}

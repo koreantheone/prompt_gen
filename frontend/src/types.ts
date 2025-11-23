@@ -55,3 +55,32 @@ export const API_OPTIONS = [
         ]
     }
 ];
+
+export interface HierarchyNode {
+    name: string;
+    value: number;
+    description?: string;
+    children?: HierarchyNode[];
+}
+
+export interface EvaluationScore {
+    logicalStructure: number;
+    keywordRelevance: number;
+    searchVolumeRealism: number;
+    businessValue: number;
+}
+
+export interface Evaluation {
+    scores: EvaluationScore;
+    totalScore: number;
+    reasoning: string;
+    strengths: string[];
+    weaknesses: string[];
+    hierarchyAnalysis: string;
+}
+
+export interface AnalysisResult {
+    hierarchy: HierarchyNode;
+    prompts: any[];
+    evaluation?: Evaluation;
+}

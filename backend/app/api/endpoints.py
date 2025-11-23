@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
 from app.services.llm_service import LLMService
 from app.services.dataforseo_client import DataForSEOClient
@@ -19,6 +19,7 @@ class SearchRequest(BaseModel):
     mode: str
     apis: List[str]
     llm_provider: str = "openai"
+    include_evaluation: bool = False
 
 class JobStatus(BaseModel):
     id: str
@@ -85,9 +86,40 @@ def process_job(job_id: str, request: SearchRequest):
         context_docs = vs.query(request.prompt, n_results=20)
         context_str = "\n\n".join(context_docs)
         
-        result_json = llm.generate_hierarchy_and_prompts(request.prompt, context_str)
+        result_json_str = llm.generate_hierarchy_and_prompts(request.prompt, context_str)
         
-        jobs[job_id]["result"] = result_json
+        # Parse the result string to JSON object
+        import json
+        try:
+            result_data = json.loads(result_json_str)
+        except json.JSONDecodeError:
+            log("Failed to parse hierarchy JSON, using raw string.")
+            result_data = {"raw": result_json_str}
+
+        # 5. Evaluation (Optional)
+        if request.include_evaluation and isinstance(result_data, dict) and "hierarchy" in result_data:
+            log("Running 8-Expert Evaluation...")
+            jobs[job_id]["progress"] = 90
+            
+            # Wrap single hierarchy in a list to match evaluation format
+            # The evaluation logic expects a list of hierarchy options
+            hierarchy_option = {
+                "agentName": "RAG Generator",
+                "perspective": "Data-Driven RAG",
+                "description": "Generated based on search data and RAG context.",
+                "hierarchy": result_data["hierarchy"]
+            }
+            
+            def eval_log(msg):
+                log(f"[Eval] {msg}")
+
+            has_korean = "ko" in request.language or any(ord(c) > 127 for c in request.prompt)
+            evaluated_options = llm.evaluate_hierarchies([hierarchy_option], has_korean=has_korean, on_log=eval_log)
+            
+            # Add evaluation back to result
+            result_data["evaluation"] = evaluated_options[0].get("evaluation", {})
+            
+        jobs[job_id]["result"] = json.dumps(result_data) if isinstance(result_data, dict) else result_data
         jobs[job_id]["progress"] = 100
         jobs[job_id]["status"] = "Complete"
         log("Job finished successfully.")
@@ -114,3 +146,20 @@ async def get_status(job_id: str):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return jobs[job_id]
+
+class PromptGenRequest(BaseModel):
+    csv_content: str
+    llm_provider: str = "openai"
+
+@router.post("/generate-prompts", response_model=Dict)
+async def generate_prompts(request: PromptGenRequest):
+    llm = LLMService(provider=request.llm_provider)
+    result_json_str = llm.generate_prompts_from_csv(request.csv_content)
+    
+    import json
+    try:
+        result_data = json.loads(result_json_str)
+    except json.JSONDecodeError:
+        result_data = {"prompts": [], "raw": result_json_str}
+        
+    return result_data

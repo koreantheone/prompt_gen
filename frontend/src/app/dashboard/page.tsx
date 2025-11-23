@@ -1,16 +1,22 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const jobId = searchParams.get('jobId');
+    const logsEndRef = useRef<HTMLDivElement>(null);
 
     const [progress, setProgress] = useState(0);
     const [status, setStatus] = useState('Initializing...');
     const [logs, setLogs] = useState<string[]>([]);
+
+    // Auto-scroll to bottom of logs
+    useEffect(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [logs]);
 
     useEffect(() => {
         if (!jobId) return;
@@ -29,7 +35,6 @@ function DashboardContent() {
                 if (data.status === 'Complete') {
                     clearInterval(interval);
                     // Pass the result to the results page via localStorage or state management
-                    // For simplicity, we'll store it in localStorage
                     localStorage.setItem('ragResult', JSON.stringify(data.result));
                     setTimeout(() => router.push('/results'), 1000);
                 }
@@ -68,6 +73,7 @@ function DashboardContent() {
                                 {log}
                             </div>
                         ))}
+                        <div ref={logsEndRef} />
                     </div>
                 </div>
             </div>
