@@ -10,7 +10,8 @@ from typing import List, Dict
 class VectorStore:
     def __init__(self):
         if HAS_CHROMA:
-            self.client = chromadb.Client()
+            # Use EphemeralClient for in-memory storage (better for cloud deployments)
+            self.client = chromadb.EphemeralClient()
             self.collection = self.client.get_or_create_collection(name="keyword_data")
         else:
             self.client = None
