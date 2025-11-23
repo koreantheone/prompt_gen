@@ -17,8 +17,9 @@ class LLMService:
             # Map frontend model names to official Google AI Studio model names
             model_mapping = {
                 "gemini-1.5-flash": "gemini-1.5-flash",
+                "gemini-1.5-pro": "gemini-1.5-pro",
                 "gemini-2.5-flash": "gemini-2.5-flash",
-                "gemini-3.0-preview": "gemini-3-pro",  # Using gemini-3-pro for 3.0 preview
+                "gemini-3-pro-preview": "gemini-3-pro-preview",
                 "gemini": "gemini-1.5-flash"  # legacy default
             }
             
