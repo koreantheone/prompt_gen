@@ -14,15 +14,15 @@ class LLMService:
             self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         elif self.provider.startswith("gemini"):
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            # Use the specific model name passed from frontend, e.g., 'gemini-1.5-flash'
-            # If it's just 'gemini' (legacy), default to 1.5 flash
-            model_name = self.provider if self.provider != "gemini" else "gemini-1.5-flash"
+            # Map frontend model names to actual Gemini API model names
+            model_mapping = {
+                "gemini-1.5-flash": "gemini-1.5-flash-latest",
+                "gemini-2.5-flash": "gemini-2.0-flash-exp",  # 2.5 doesn't exist yet, use 2.0
+                "gemini-3.0-preview": "gemini-2.0-flash-exp",  # 3.0 doesn't exist yet, use 2.0
+                "gemini": "gemini-1.5-flash-latest"  # legacy default
+            }
             
-            # Map user-friendly names to actual API model names if needed
-            # Assuming the frontend sends valid API model IDs or we map them here.
-            # For now, we trust the frontend sends valid IDs like 'gemini-1.5-flash'
-            # Note: 2.5 and 3.0 might need specific strings once released.
-            # We will use the string as is.
+            model_name = model_mapping.get(self.provider, "gemini-1.5-flash-latest")
             self.gemini_model = genai.GenerativeModel(model_name)
 
     def generate_keywords(self, prompt: str, base_keywords: str, count: int = 50) -> List[str]:
