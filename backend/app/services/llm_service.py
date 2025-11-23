@@ -52,6 +52,14 @@ class LLMService:
         json_response = response.json()
         return json_response.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
 
+    def _clean_json_response(self, response_text: str) -> str:
+        """
+        Cleans the response text to extract JSON content, removing markdown code blocks.
+        """
+        # Remove markdown code blocks (```json ... ``` or ``` ... ```)
+        cleaned_text = re.sub(r"```(?:json)?\s*(.*?)\s*```", r"\1", response_text, flags=re.DOTALL).strip()
+        return cleaned_text
+
     def generate_keywords(self, prompt: str, base_keywords: str, count: int = 50) -> List[str]:
         """
         Generates related keywords based on the user prompt.
@@ -84,8 +92,10 @@ class LLMService:
                     response_text = self._call_gemini_api(full_prompt)
                     print(f"Gemini Response: {response_text}") # Debug log
                     
-                    # Try to extract JSON from the response
-                    data = json.loads(response_text)
+                    # Clean and parse JSON
+                    cleaned_text = self._clean_json_response(response_text)
+                    data = json.loads(cleaned_text)
+                    
                     if isinstance(data, list):
                         return data
                     return data.get("keywords", [])
@@ -130,7 +140,7 @@ class LLMService:
             elif self.provider.startswith("gemini"):
                 full_prompt = f"{system_prompt}\n\n{user_content}\n\nReturn JSON only."
                 response_text = self._call_gemini_api(full_prompt)
-                return response_text
+                return self._clean_json_response(response_text)
 
         except Exception as e:
             print(f"Error generating prompts ({self.provider}): {e}")
@@ -254,7 +264,7 @@ Respond with ONLY this JSON format:
             elif self.provider.startswith("gemini"):
                 response_text = self._call_gemini_api(eval_prompt)
                 # Clean up markdown code blocks if present
-                cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
+                cleaned_text = self._clean_json_response(response_text)
                 eval_data = json.loads(cleaned_text)
             
             # Merge evaluations back into hierarchies
@@ -309,7 +319,7 @@ Respond with ONLY this JSON format:
             elif self.provider.startswith("gemini"):
                 full_prompt = f"{system_prompt}\n\n{user_content}\n\nReturn JSON only."
                 response_text = self._call_gemini_api(full_prompt)
-                return response_text
+                return self._clean_json_response(response_text)
 
         except Exception as e:
             print(f"Error generating prompts from CSV ({self.provider}): {e}")

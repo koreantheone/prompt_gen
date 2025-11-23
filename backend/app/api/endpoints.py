@@ -43,6 +43,9 @@ def process_job(job_id: str, request: SearchRequest):
         jobs[job_id]["progress"] = 10
         generated_keywords = llm.generate_keywords(request.prompt, request.keywords)
         log(f"Generated {len(generated_keywords)} keywords.")
+        
+        if not generated_keywords:
+            log("WARNING: No keywords generated. Check LLM response or parsing.")
 
         # 2. Fetch Data
         log("Fetching data from DataforSEO...")
