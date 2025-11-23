@@ -14,15 +14,15 @@ class LLMService:
             self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         elif self.provider.startswith("gemini"):
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            # Map frontend model names to actual Gemini API model names
+            # Map frontend model names to official Google AI Studio model names
             model_mapping = {
-                "gemini-1.5-flash": "gemini-1.5-flash-latest",
-                "gemini-2.5-flash": "gemini-2.0-flash-exp",  # 2.5 doesn't exist yet, use 2.0
-                "gemini-3.0-preview": "gemini-2.0-flash-exp",  # 3.0 doesn't exist yet, use 2.0
-                "gemini": "gemini-1.5-flash-latest"  # legacy default
+                "gemini-1.5-flash": "gemini-1.5-flash",
+                "gemini-2.5-flash": "gemini-2.5-flash",
+                "gemini-3.0-preview": "gemini-3-pro",  # Using gemini-3-pro for 3.0 preview
+                "gemini": "gemini-1.5-flash"  # legacy default
             }
             
-            model_name = model_mapping.get(self.provider, "gemini-1.5-flash-latest")
+            model_name = model_mapping.get(self.provider, "gemini-1.5-flash")
             self.gemini_model = genai.GenerativeModel(model_name)
 
     def generate_keywords(self, prompt: str, base_keywords: str, count: int = 50) -> List[str]:
