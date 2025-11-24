@@ -8,10 +8,10 @@ except ImportError:
 from typing import List, Dict
 
 class VectorStore:
-    def __init__(self):
+    def __init__(self, persist_directory: str = "./chroma_db"):
         if HAS_CHROMA:
-            # Use EphemeralClient for in-memory storage (better for cloud deployments)
-            self.client = chromadb.EphemeralClient()
+            # Use PersistentClient to save data to disk
+            self.client = chromadb.PersistentClient(path=persist_directory)
             self.collection = self.client.get_or_create_collection(name="keyword_data")
         else:
             self.client = None

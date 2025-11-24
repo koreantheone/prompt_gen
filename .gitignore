@@ -8,3 +8,7 @@ node_modules/
 .next/
 venv/
 .venv/
+backend/venv/
+backend/chroma_db/
+backend/requests_db/
+backend/__pycache__/

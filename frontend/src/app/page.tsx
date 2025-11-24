@@ -30,7 +30,7 @@ export default function Home() {
     e.preventDefault();
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/api/search`, {
+      const res = await fetch(`${apiUrl}/api/requests/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -39,7 +39,7 @@ export default function Home() {
       if (!res.ok) throw new Error('Failed to start search');
 
       const data = await res.json();
-      router.push(`/dashboard?jobId=${data.id}`);
+      router.push(`/requests/${data.requestId}`);
     } catch (error) {
       console.error(error);
       alert('Error starting search. Is the backend running?');
@@ -56,7 +56,13 @@ export default function Home() {
           Generate high-quality prompts from real-world data.
         </p>
 
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center gap-6 mb-8">
+          <Link
+            href="/requests"
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          >
+            View All Requests
+          </Link>
           <Link
             href="/prompt-generator"
             className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
