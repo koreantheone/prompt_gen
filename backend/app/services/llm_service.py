@@ -17,22 +17,24 @@ class LLMService:
         elif self.provider.startswith("gemini"):
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
             # Map frontend model names to official Google AI Studio model names
-            # Using the same models as in the TypeScript code
+            # Using v1 API which has better model support
             model_mapping = {
-                "gemini-1.5-flash": "gemini-1.5-flash",
-                "gemini-1.5-pro": "gemini-1.5-pro",
-                "gemini-2.5-flash": "gemini-2.5-flash",
-                "gemini-3-pro-preview": "gemini-3-pro-preview",
-                "gemini": "gemini-2.5-flash"  # default
+                "gemini-1.5-flash": "gemini-1.5-flash-latest",
+                "gemini-1.5-pro": "gemini-1.5-pro-latest",
+                "gemini-2.5-flash": "gemini-2.0-flash-exp",  # 2.5 doesn't exist, use 2.0
+                "gemini-3-pro-preview": "gemini-exp-1206",  # Latest experimental model
+                "gemini-3.0-preview": "gemini-exp-1206",
+                "gemini": "gemini-1.5-flash-latest"  # default to stable model
             }
             
-            self.gemini_model_name = model_mapping.get(self.provider, "gemini-2.5-flash")
+            self.gemini_model_name = model_mapping.get(self.provider, "gemini-1.5-flash-latest")
 
     def _call_gemini_api(self, prompt: str) -> str:
         """
         Calls Gemini REST API directly, matching the TypeScript implementation.
+        Using v1 API for better model compatibility.
         """
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model_name}:generateContent?key={self.gemini_api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1/models/{self.gemini_model_name}:generateContent?key={self.gemini_api_key}"
         
         payload = {
             "contents": [{
