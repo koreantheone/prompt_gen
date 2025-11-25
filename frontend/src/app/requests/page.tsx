@@ -56,7 +56,8 @@ export default function RequestsPage() {
 
     const fetchRequests = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/requests');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${apiUrl}/api/requests`);
             const data: RequestListResponse = await response.json();
             setRequests(data.requests);
             setTotal(data.total);
@@ -71,7 +72,8 @@ export default function RequestsPage() {
         if (!confirm('Are you sure you want to delete this request?')) return;
 
         try {
-            await fetch(`http://localhost:8000/api/requests/${requestId}`, {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            await fetch(`${apiUrl}/api/requests/${requestId}`, {
                 method: 'DELETE',
             });
             fetchRequests();
