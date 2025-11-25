@@ -16,18 +16,18 @@ class LLMService:
             self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         elif self.provider.startswith("gemini"):
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-            # Map frontend model names to official Google AI Studio model names
-            # Using v1 API which has better model support
+            # Map frontend model names to official Gemini v1 API model names
+            # These are confirmed available models from the v1 API
             model_mapping = {
-                "gemini-1.5-flash": "gemini-1.5-flash-latest",
-                "gemini-1.5-pro": "gemini-1.5-pro-latest",
-                "gemini-2.5-flash": "gemini-2.0-flash-exp",  # 2.5 doesn't exist, use 2.0
-                "gemini-3-pro-preview": "gemini-exp-1206",  # Latest experimental model
-                "gemini-3.0-preview": "gemini-exp-1206",
-                "gemini": "gemini-1.5-flash-latest"  # default to stable model
+                "gemini-1.5-flash": "gemini-1.5-flash",
+                "gemini-1.5-pro": "gemini-1.5-pro",
+                "gemini-2.5-flash": "gemini-2.5-flash",  # ✅ Available in v1 API
+                "gemini-2.5-pro": "gemini-2.5-pro",      # ✅ Available in v1 API
+                "gemini-2.0-flash": "gemini-2.0-flash",  # ✅ Available in v1 API
+                "gemini": "gemini-2.5-flash"             # Default to latest stable model
             }
             
-            self.gemini_model_name = model_mapping.get(self.provider, "gemini-1.5-flash-latest")
+            self.gemini_model_name = model_mapping.get(self.provider, "gemini-2.5-flash")
 
     def _call_gemini_api(self, prompt: str) -> str:
         """
