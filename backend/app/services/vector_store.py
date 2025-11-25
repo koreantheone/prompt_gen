@@ -6,6 +6,7 @@ except ImportError:
     print("ChromaDB not found. Using mock vector store.")
 
 from typing import List, Dict
+import uuid
 
 class VectorStore:
     def __init__(self, persist_directory: str = "./chroma_db"):
@@ -21,7 +22,7 @@ class VectorStore:
     def add_data(self, data_items: List[Dict]):
         """
         Adds keyword data to the vector store.
-        data_items should be a list of dicts with 'keyword' and 'data'.
+        data_items should be a list of dicts with 'keyword', 'api', and 'data'.
         """
         if HAS_CHROMA:
             documents = []
@@ -30,12 +31,17 @@ class VectorStore:
 
             for item in data_items:
                 kw = item['keyword']
+                api = item.get('api', 'unknown')
                 # Convert complex data to string representation for embedding
-                content = f"Keyword: {kw}\nData: {str(item['data'])}"
+                content = f"Keyword: {kw}\\nAPI: {api}\\nData: {str(item['data'])}"
+                
+                # Generate unique ID using UUID to avoid duplicates
+                # Same keyword can be fetched from multiple APIs
+                unique_id = str(uuid.uuid4())
                 
                 documents.append(content)
-                metadatas.append({"keyword": kw})
-                ids.append(kw)
+                metadatas.append({"keyword": kw, "api": api})
+                ids.append(unique_id)
 
             if documents:
                 self.collection.add(
