@@ -120,9 +120,10 @@ class LLMService:
         """
         system_prompt = (
             "You are an expert prompt engineer. Use the provided search data context to "
-            "create a structured hierarchy of subtopics and generate high-quality, "
-            "real-world prompts for each. "
-            "Return a JSON object with 'hierarchy' (nested objects) and 'prompts' (list of objects)."
+            "create a structured hierarchy of subtopics. "
+            "Return a JSON object with a 'hierarchy' key containing a LIST of objects. "
+            "Each object MUST have 'Depth1', 'Depth2', and 'Depth3' keys representing the hierarchy levels. "
+            "Do not use nested objects. Return a flat list of all leaf nodes."
         )
 
         user_content = f"Topic: {topic}\n\nContext Data:\n{context}"
@@ -301,7 +302,9 @@ Respond with ONLY this JSON format:
             "You are an expert prompt engineer. You will be provided with a CSV representing a keyword hierarchy "
             "(Depth1, Depth2, Depth3). "
             "Your task is to generate high-quality, real-world prompts for each unique leaf node or key topic in the CSV. "
-            "Return a JSON object with a 'prompts' key containing a list of objects, each with 'topic', 'type', and 'content' (the prompt text)."
+            "Return a JSON object with a 'prompts' key containing a list of objects. "
+            "Each object MUST have 'Depth1', 'Depth2', 'Depth3', and 'Prompt' keys. "
+            "Ensure the Depth keys match the input hierarchy context for that prompt."
         )
 
         user_content = f"CSV Hierarchy:\n{csv_content}"

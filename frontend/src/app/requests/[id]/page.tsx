@@ -117,6 +117,36 @@ export default function RequestDetailPage() {
         );
     }
 
+    const downloadCSV = (data: any[], filename: string) => {
+        if (!data || data.length === 0) return;
+
+        // Get headers from first object
+        const headers = Object.keys(data[0]);
+
+        // Create CSV content
+        const csvContent = [
+            headers.join(','), // Header row
+            ...data.map(row => headers.map(header => {
+                const cell = row[header] || '';
+                // Escape quotes and wrap in quotes if contains comma
+                return `"${String(cell).replace(/"/g, '""')}"`;
+            }).join(','))
+        ].join('\n');
+
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-7xl mx-auto">
@@ -246,13 +276,6 @@ export default function RequestDetailPage() {
                                 </div>
 
                                 <div>
-                                    <h4 className="font-medium mb-2">API Responses ({request.tasks.dataCollection.data.apiResponses?.length || 0})</h4>
-                                    <div className="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto">
-                                        <pre className="text-xs">{JSON.stringify(request.tasks.dataCollection.data.apiResponses, null, 2)}</pre>
-                                    </div>
-                                </div>
-
-                                <div>
                                     <h4 className="font-medium mb-2">Logs</h4>
                                     <div className="bg-gray-900 text-green-400 p-4 rounded max-h-60 overflow-y-auto font-mono text-xs">
                                         {request.tasks.dataCollection.logs.map((log, i) => (
@@ -268,30 +291,51 @@ export default function RequestDetailPage() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-lg font-semibold">Hierarchy Generation</h3>
-                                    <button
-                                        onClick={() => retryTask('hierarchyGeneration')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    >
-                                        Re-run Task
-                                    </button>
+                                    <div className="flex gap-2">
+                                        {request.tasks.hierarchyGeneration.data.hierarchy && (
+                                            <button
+                                                onClick={() => downloadCSV(request.tasks.hierarchyGeneration.data.hierarchy, `hierarchy_${requestId}.csv`)}
+                                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                                            >
+                                                Download CSV
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => retryTask('hierarchyGeneration')}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        >
+                                            Re-run Task
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {request.tasks.hierarchyGeneration.data.hierarchy && (
-                                    <div>
-                                        <h4 className="font-medium mb-2">Generated Hierarchy</h4>
+                                {request.tasks.hierarchyGeneration.data.hierarchy && Array.isArray(request.tasks.hierarchyGeneration.data.hierarchy) ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200 border">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth1</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth2</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth3</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {request.tasks.hierarchyGeneration.data.hierarchy.map((item: any, i: number) => (
+                                                    <tr key={i} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.Depth1}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.Depth2}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.Depth3}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    request.tasks.hierarchyGeneration.data.hierarchy && (
                                         <div className="bg-gray-50 p-4 rounded max-h-96 overflow-y-auto">
                                             <pre className="text-xs">{JSON.stringify(request.tasks.hierarchyGeneration.data.hierarchy, null, 2)}</pre>
                                         </div>
-                                    </div>
-                                )}
-
-                                {request.tasks.hierarchyGeneration.data.evaluation && (
-                                    <div>
-                                        <h4 className="font-medium mb-2">Evaluation</h4>
-                                        <div className="bg-gray-50 p-4 rounded">
-                                            <pre className="text-xs">{JSON.stringify(request.tasks.hierarchyGeneration.data.evaluation, null, 2)}</pre>
-                                        </div>
-                                    </div>
+                                    )
                                 )}
 
                                 <div>
@@ -310,25 +354,55 @@ export default function RequestDetailPage() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-lg font-semibold">Prompt Generation</h3>
-                                    <button
-                                        onClick={() => retryTask('promptGeneration')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    >
-                                        Re-run Task
-                                    </button>
+                                    <div className="flex gap-2">
+                                        {request.tasks.promptGeneration.data.prompts && (
+                                            <button
+                                                onClick={() => {
+                                                    // Add 'No' column for CSV export
+                                                    const csvData = request.tasks.promptGeneration.data.prompts.map((p: any, i: number) => ({
+                                                        No: i + 1,
+                                                        ...p
+                                                    }));
+                                                    downloadCSV(csvData, `prompts_${requestId}.csv`);
+                                                }}
+                                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                                            >
+                                                Download CSV
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => retryTask('promptGeneration')}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        >
+                                            Re-run Task
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {request.tasks.promptGeneration.data.prompts && (
-                                    <div>
-                                        <h4 className="font-medium mb-2">Generated Prompts ({request.tasks.promptGeneration.data.prompts.length})</h4>
-                                        <div className="space-y-4">
-                                            {request.tasks.promptGeneration.data.prompts.map((prompt: any, i: number) => (
-                                                <div key={i} className="border rounded-lg p-4 bg-gray-50">
-                                                    <div className="font-medium mb-2">{prompt.topic || `Prompt ${i + 1}`}</div>
-                                                    <div className="text-sm text-gray-700">{prompt.content || JSON.stringify(prompt)}</div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200 border">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth1</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth2</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth3</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prompt</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {request.tasks.promptGeneration.data.prompts.map((prompt: any, i: number) => (
+                                                    <tr key={i} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prompt.Depth1}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prompt.Depth2}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prompt.Depth3}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 min-w-[300px]">{prompt.Prompt || prompt.content}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
 
